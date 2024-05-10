@@ -1,17 +1,35 @@
-import finiteStateAutomata
+import fsa
 
-behavior = finiteStateAutomata.FSA()
+behavior = fsa.FSA()
 
 behavior.addState('IDLE')
 behavior.addState('MOVING')
-behavior.addState('COLLECTING')
 
-behavior.addEdge('IDLE', 'MOVING', 'A')
+behavior.addEdge('IDLE', 'MOVING', {'paramA': 0, 'paramB': 1})
+behavior.addEdge('MOVING', 'IDLE', {'paramA': 1, 'paramB': 0})
 
-behavior.addEdge('MOVING', 'IDLE', 'B')
-behavior.addEdge('MOVING', 'COLLECTING', 'C')
+# print(behavior.getCurrState())
 
-behavior.addEdge('COLLECTING', 'IDLE', 'B')
-behavior.addEdge('COLLECTING', 'MOVING', 'A')
+behavior.next({'paramA': 1, 'paramB': 0})
+# print(behavior.getCurrState())
+
+behavior.next({'paramA': 0, 'paramB': 1})
+# print(behavior.getCurrState())
+
+behavior.next({'paramA': 0, 'paramB': 1})
+# print(behavior.getCurrState())
+
+behavior.next({'paramA': 1, 'paramB': 0})
+# print(behavior.getCurrState())
+
+behavior.next({'paramA': 0, 'paramB': 1})
+# print(behavior.getCurrState())
+
+behavior.reset()
+# print(behavior.getCurrState())
+
+behavior.setInitialState('MOVING')
+behavior.reset()
+# print(behavior.getCurrState())
 
 behavior.draw()
