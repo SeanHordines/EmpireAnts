@@ -33,3 +33,9 @@ behavior.reset()
 # print(behavior.getCurrState())
 
 behavior.draw()
+
+filepath = "D:/Sean/programmingshit/EmpireAnts/sampleFSA.json"
+fsa.saveJSON(behavior, filepath)
+behavior1 = fsa.loadJSON(filepath)
+
+behavior1.draw()

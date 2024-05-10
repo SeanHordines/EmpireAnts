@@ -1,0 +1,18 @@
+{
+    "graph": {
+        "IDLE": {
+            "MOVING": {
+                "paramA": 0,
+                "paramB": 1
+            }
+        },
+        "MOVING": {
+            "IDLE": {
+                "paramA": 1,
+                "paramB": 0
+            }
+        }
+    },
+    "initial": "MOVING",
+    "current": "MOVING"
+}

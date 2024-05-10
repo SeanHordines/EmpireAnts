@@ -1,5 +1,6 @@
 import networkx as nx
 import matplotlib.pyplot as plt
+import json
 from typing import Dict, Tuple, Union
 
 class FSA:
@@ -111,3 +112,19 @@ class FSA:
         # Display the graph
         plt.axis('off')
         plt.show()
+
+def saveJSON(fsa: FSA, filePath: str) -> None:
+    with open(filePath, "w") as file:
+        data = {"graph": fsa.graph,
+            "initial": fsa.initialState,
+            "current": fsa.currState}
+        json.dump(data, file, indent=4)
+
+def loadJSON(filePath: str) -> FSA:
+    with open(filePath, "r") as file:
+        data = json.load(file)
+        fsa = FSA()
+        fsa.graph = data["graph"]
+        fsa.initialState = data["initial"]
+        fsa.currState = data["current"]
+        return fsa
