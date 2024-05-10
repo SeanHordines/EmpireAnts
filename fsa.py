@@ -9,9 +9,9 @@ class FSA:
         # first key is the start state
         # second key is the end state
         # value is the transition vector
-        self.graph = {}
         self.initialState = None
         self.currState = None
+        self.graph = {}
 
     def addState(self, state: str) -> None:
         # no duplicates
@@ -43,6 +43,18 @@ class FSA:
             return
 
         del self.graph[startState][endState]
+
+    def merge(self, other) -> None:
+        for startState, edges in other.graph.items():
+            if startState not in self.graph:
+                self.graph[startState] = {}
+
+            for endState, transitionVector in edges.items():
+                if endState not in self.graph:
+                    self.graph[endState] = {}
+
+                if endState not in self.graph[startState]:
+                    self.graph[startState][endState] = transitionVector
 
     def reset(self):
         self.currState = self.initialState
@@ -81,7 +93,7 @@ class FSA:
             tempDotProduct = 0
             for key in commonKeys:
                 # compute the dot product of the vectors
-                tempDotProduct = tempDotProduct + inputVector[key]*tranistionVector[key]
+                tempDotProduct += inputVector[key]*tranistionVector[key]
 
             # check for new max and update
             if tempDotProduct > maxDotProduct:
@@ -92,39 +104,39 @@ class FSA:
         self.currState = newState
         return self.currState
 
-    def draw(self) -> None:
-        # Create a NetworkX graph object
-        G = nx.DiGraph()
+def draw(fsa: FSA) -> None:
+    # Create a NetworkX graph object
+    G = nx.DiGraph()
 
-        # Add nodes to the graph
-        for node in self.graph.keys():
-            G.add_node(node)
+    # Add nodes to the graph
+    for node in fsa.graph.keys():
+        G.add_node(node)
 
-        # Add edges to the graph
-        for start_node, end_nodes in self.graph.items():
-            for end_node in end_nodes.keys():
-                G.add_edge(start_node, end_node)
+    # Add edges to the graph
+    for start_node, end_nodes in fsa.graph.items():
+        for end_node in end_nodes.keys():
+            G.add_edge(start_node, end_node)
 
-        # Draw the graph
-        pos = nx.spring_layout(G)  # Compute the layout of the nodes
-        nx.draw(G, pos, with_labels=True)  # Draw the nodes and edges
+    # Draw the graph
+    pos = nx.spring_layout(G)  # Compute the layout of the nodes
+    nx.draw(G, pos, with_labels=True)  # Draw the nodes and edges
 
-        # Display the graph
-        plt.axis('off')
-        plt.show()
+    # Display the graph
+    plt.axis('off')
+    plt.show()
 
 def saveJSON(fsa: FSA, filePath: str) -> None:
     with open(filePath, "w") as file:
-        data = {"graph": fsa.graph,
-            "initial": fsa.initialState,
-            "current": fsa.currState}
+        data = {"initial": fsa.initialState,
+            "current": fsa.currState,
+            "graph": fsa.graph}
         json.dump(data, file, indent=4)
 
 def loadJSON(filePath: str) -> FSA:
     with open(filePath, "r") as file:
         data = json.load(file)
         fsa = FSA()
-        fsa.graph = data["graph"]
         fsa.initialState = data["initial"]
         fsa.currState = data["current"]
+        fsa.graph = data["graph"]
         return fsa

@@ -20,6 +20,9 @@ class ant:
         self.behavior: fsa.FSA = fsa.FSA()
         self.state: str = self.behavior.getInitialState()
 
+    def __str__(self) -> str:
+        return "coords: (%d, %d, %d)\nfacing: %d\nstate: %s" % (self.r, self.s, self.t, self.facing, self.state)
+
     def act(self) -> None:
         if self.state == 'IDLING':
             return
@@ -44,6 +47,3 @@ class ant:
 
     def getPos(self) -> Tuple[Tuple[int, int, int], int]:
         return (self.r, self.s, self.t), self.facing
-
-    def __str__(self) -> str:
-        return "coords: (%d, %d, %d)\nfacing: %d\nstate: %s" % (self.r, self.s, self.t, self.facing, self.state)
