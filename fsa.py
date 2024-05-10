@@ -1,5 +1,6 @@
 import networkx as nx
 import matplotlib.pyplot as plt
+from typing import Dict, Tuple, Union
 
 class FSA:
     def __init__(self):
@@ -11,7 +12,7 @@ class FSA:
         self.initialState = None
         self.currState = None
 
-    def addState(self, state):
+    def addState(self, state: str) -> None:
         # no duplicates
         if state in self.graph.keys():
             return
@@ -24,18 +25,18 @@ class FSA:
             self.initialState = state
             self.currState = state
 
-    def removeState(self, state):
+    def removeState(self, state: str) -> None:
         # check if present first
         if state not in self.graph.keys():
             return
 
         del self.graph[state]
 
-    def addEdge(self, startState, endState, transitionVector):
+    def addEdge(self, startState: str, endState: str, transitionVector: Dict[str, Union[int, float]]) -> None:
         # will replace a duplicate edge with new value
         self.graph[startState][endState] = transitionVector
 
-    def removeEdge(self, startState, endState):
+    def removeEdge(self, startState: str, endState: str) -> None:
         # check if present first
         if endState not in self.graph[startState].keys():
             return
@@ -45,27 +46,27 @@ class FSA:
     def reset(self):
         self.currState = self.initialState
 
-    def getInitialState(self):
+    def getInitialState(self) -> str:
         return self.initialState
 
-    def setInitialState(self, newState):
+    def setInitialState(self, newState: str) -> None:
         # check if present first
         if newState not in self.graph.keys():
             return
 
         self.initialState = newState
 
-    def getCurrState(self):
+    def getCurrState(self) -> str:
         return self.currState
 
-    def setCurrState(self, newState):
+    def setCurrState(self, newState: str) -> None:
         # check if present first
         if newState not in self.graph.keys():
             return
 
             self.currState = newState
 
-    def next(self, inputVector):
+    def next(self, inputVector: Dict[str, Union[int, float]]) -> str:
         newState = self.currState
         maxDotProduct = 0
 
@@ -88,8 +89,9 @@ class FSA:
 
         # transition to state with the largest dot product
         self.currState = newState
+        return self.currState
 
-    def draw(self):
+    def draw(self) -> None:
         # Create a NetworkX graph object
         G = nx.DiGraph()
 

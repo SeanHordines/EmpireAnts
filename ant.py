@@ -1,14 +1,26 @@
 import fsa
+from typing import Dict, Tuple, Union
+
+BASIS_VECTORS = {
+    0: (0, 1, -1),   # N
+    1: (1, 0, -1),   # ENE
+    2: (1, -1, 0),   # ESE
+    3: (0, -1, 1),   # S
+    4: (-1, 0, 1),   # WSW
+    5: (-1, 1, 0)    # WNW
+}
 
 class ant:
-    def __init__(self, axialCoords):
-        self.r, self.s, self.t = axialCoords
-        self.facing = 0
+    def __init__(self, axialCoords: Tuple[int, int, int]):
+        self.r: int = axialCoords[0]
+        self.s: int = axialCoords[1]
+        self.t: int = axialCoords[2]
+        self.facing: int = 0
 
-        self.behavior = fsa.FSA()
-        self.state = self.behavior.getInitialState()
+        self.behavior: fsa.FSA = fsa.FSA()
+        self.state: str = self.behavior.getInitialState()
 
-    def act(self):
+    def act(self) -> None:
         if self.state == 'IDLING':
             return
 
@@ -16,31 +28,22 @@ class ant:
             self.move()
             return
 
-    def turn(self, n, cw = True):
-        self.facing = self.facing + n * (1 if cw else -1) % 6
+    def detect(self, cell: Dict[str, Union[int, float]], target: str) -> Union[int, float]:
+        return cell.get(target, 0)
 
-    def move(self):
-        if self.facing == 0: # N
-            self.s = self.s + 1
-            self.t = self.t - 1
-        elif self.facing == 1: # ENE
-            self.r = self.r + 1
-            self.t = self.t - 1
-        elif self.facing == 2: # ESE
-            self.r = self.r + 1
-            self.s = self.s - 1
-        elif self.facing == 3: # S
-            self.t = self.t + 1
-            self.s = self.s - 1
-        elif self.facing == 4: # WSW
-            self.t = self.t + 1
-            self.r = self.r - 1
-        elif self.facing == 5: # WNW
-            self.s = self.s + 1
-            self.r = self.r - 1
+    def turn(self, angle: int, clockwise: bool = True) -> int:
+        self.facing = self.facing + angle * (1 if clockwise else -1) % 6
+        return self.facing
 
-    def getPos(self):
+    def move(self, dist: int = 1) -> Tuple[int, int, int]:
+        facingVector = BASIS_VECTORS[self.facing]
+        self.r += facingVector[0] * dist
+        self.s += facingVector[1] * dist
+        self.t += facingVector[2] * dist
+        return (self.r, self.s, self.t)
+
+    def getPos(self) -> Tuple[Tuple[int, int, int], int]:
         return (self.r, self.s, self.t), self.facing
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "coords: (%d, %d, %d)\nfacing: %d\nstate: %s" % (self.r, self.s, self.t, self.facing, self.state)
