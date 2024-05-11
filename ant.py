@@ -17,19 +17,26 @@ class ant:
         self.t: int = axialCoords[2]
         self.facing: int = 0
 
-        self.behavior: fsa.FSA = fsa.FSA()
+        self.behavior: FSA = fsa.FSA()
         self.state: str = self.behavior.getInitialState()
 
     def __str__(self) -> str:
         return "coords: (%d, %d, %d)\nfacing: %d\nstate: %s" % (self.r, self.s, self.t, self.facing, self.state)
 
-    def act(self) -> None:
-        if self.state == 'IDLING':
-            return
+    def setBehavior(self, fsa) -> None:
+        self.behavior = fsa
+        self.state = self.behavior.getInitialState()
 
-        if self.state == 'MOVING':
-            self.move()
+    def next(self, inputVector) ->  None:
+        self.state = self.behavior.next(inputVector)
+
+    def act(self):
+        state = self.behavior.nodes[self.state]
+        funcName = state["func"]
+        if funcName == "":
             return
+        func = getattr(self, funcName)
+        return func()
 
     def detect(self, cell: Dict[str, Union[int, float]], target: str) -> Union[int, float]:
         return cell.get(target, 0)
@@ -43,6 +50,7 @@ class ant:
         self.r += facingVector[0] * dist
         self.s += facingVector[1] * dist
         self.t += facingVector[2] * dist
+
         return (self.r, self.s, self.t)
 
     def getPos(self) -> Tuple[Tuple[int, int, int], int]:

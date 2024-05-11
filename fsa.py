@@ -3,58 +3,82 @@ import matplotlib.pyplot as plt
 import json
 from typing import Dict, Tuple, Union
 
+def Node(name, func = None, edges = None):
+    if func is None:
+        func = ""
+    if edges is None:
+        edges = {}
+    return {'name': name, 'func': func, 'edges': edges}
+
 class FSA:
-    def __init__(self):
+    def __init__(self, name: str = None, filepath: str = None):
         # graph is a nested dictionary
         # first key is the start state
         # second key is the end state
         # value is the transition vector
+        self.name = name
         self.initialState = None
         self.currState = None
-        self.graph = {}
+        self.nodes = {}
 
-    def addState(self, state: str) -> None:
+        if filepath:
+            loadJSON(self, filepath)
+
+    def addState(self, state: Node) -> None:
         # no duplicates
-        if state in self.graph.keys():
+        if state['name'] in self.nodes:
             return
 
         # each node is a dict of edges to other nodes
-        self.graph[state] = {}
+        self.nodes[state['name']] = state
 
         # set the inital and curr state for the first added node
         if self.initialState is None:
-            self.initialState = state
-            self.currState = state
+            self.initialState = state['name']
+            self.currState = state['name']
 
-    def removeState(self, state: str) -> None:
+    def removeState(self, stateName: str) -> None:
         # check if present first
-        if state not in self.graph.keys():
+        if stateName not in self.nodes:
             return
 
-        del self.graph[state]
+        # delete the state from the top level dict
+        del self.nodes[stateName]
 
-    def addEdge(self, startState: str, endState: str, transitionVector: Dict[str, Union[int, float]]) -> None:
+        # delete all references to the deleted state
+        for iterStateName in self.nodes:
+            if stateName in self.nodes[iterStateName]['edges']:
+                del self.nodes[iterStateName]['edges'][stateName]
+
+    def addEdge(self, startStateName: str, endStateName: str, transitionVector: Dict[Node, Union[int, float]]) -> None:
+        # check if adding states is necessary
+        if startStateName not in self.nodes:
+            self.addState(Node(startStateName))
+        if endStateName not in self.nodes:
+            self.addState(Node(endStateName))
+
         # will replace a duplicate edge with new value
-        self.graph[startState][endState] = transitionVector
+        self.nodes[startStateName]['edges'][endStateName] = transitionVector
 
-    def removeEdge(self, startState: str, endState: str) -> None:
+    def removeEdge(self, startStateName: str, endStateName: str) -> None:
         # check if present first
-        if endState not in self.graph[startState].keys():
+        if startStateName not in self.nodes:
+            return
+        if endStateName not in self.nodes:
+            return
+        if endStateName not in self.nodes[startStateName]['edges']:
             return
 
-        del self.graph[startState][endState]
+        del self.nodes[startStateName]['edges'][endStateName]
 
-    def merge(self, other) -> None:
-        for startState, edges in other.graph.items():
-            if startState not in self.graph:
-                self.graph[startState] = {}
+    def merge(self, other: str) -> None:
+        for startStateName, startState in other.nodes.items():
+            if startStateName not in self.nodes:
+                self.nodes[startStateName] = startState
 
-            for endState, transitionVector in edges.items():
-                if endState not in self.graph:
-                    self.graph[endState] = {}
-
-                if endState not in self.graph[startState]:
-                    self.graph[startState][endState] = transitionVector
+            for endStateName, transitionVector in startState['edges'].items():
+                if endStateName not in self.nodes[startStateName]['edges']:
+                    self.nodes[startStateName]['edges'][endStateName] = transitionVector
 
     def reset(self):
         self.currState = self.initialState
@@ -62,43 +86,42 @@ class FSA:
     def getInitialState(self) -> str:
         return self.initialState
 
-    def setInitialState(self, newState: str) -> None:
+    def setInitialState(self, newStateName: str) -> None:
         # check if present first
-        if newState not in self.graph.keys():
+        if newStateName not in self.nodes:
             return
 
-        self.initialState = newState
+        self.initialState = newStateName
 
     def getCurrState(self) -> str:
         return self.currState
 
-    def setCurrState(self, newState: str) -> None:
+    def setCurrState(self, newStateName: str) -> None:
         # check if present first
-        if newState not in self.graph.keys():
+        if newStateName not in self.nodes:
             return
 
-            self.currState = newState
+            self.currState = newStateName
 
     def next(self, inputVector: Dict[str, Union[int, float]]) -> str:
         newState = self.currState
         maxDotProduct = 0
 
         # for each edge on the curent state
-        for tempState in self.graph[self.currState].keys():
+        for iterStateName, tranistionVector in self.nodes[self.currState]['edges'].items():
             # transition vector is the edge to the end state
-            tranistionVector = self.graph[self.currState][tempState]
 
             # only loop over the keys shared between the input and edge
             commonKeys = set(inputVector.keys()) & set(tranistionVector.keys())
-            tempDotProduct = 0
+            iterDotProduct = 0
             for key in commonKeys:
                 # compute the dot product of the vectors
-                tempDotProduct += inputVector[key]*tranistionVector[key]
+                iterDotProduct += inputVector[key]*tranistionVector[key]
 
             # check for new max and update
-            if tempDotProduct > maxDotProduct:
-                maxDotProduct = tempDotProduct
-                newState = tempState
+            if iterDotProduct > maxDotProduct:
+                maxDotProduct = iterDotProduct
+                newState = iterStateName
 
         # transition to state with the largest dot product
         self.currState = newState
@@ -109,13 +132,13 @@ def draw(fsa: FSA) -> None:
     G = nx.DiGraph()
 
     # Add nodes to the graph
-    for node in fsa.graph.keys():
-        G.add_node(node)
+    for stateName in fsa.nodes.keys():
+        G.add_node(stateName)
 
     # Add edges to the graph
-    for start_node, end_nodes in fsa.graph.items():
-        for end_node in end_nodes.keys():
-            G.add_edge(start_node, end_node)
+    for startStateName, startState in fsa.nodes.items():
+        for endStateName in startState['edges'].keys():
+            G.add_edge(startStateName, endStateName)
 
     # Draw the graph
     pos = nx.spring_layout(G)  # Compute the layout of the nodes
@@ -125,18 +148,19 @@ def draw(fsa: FSA) -> None:
     plt.axis('off')
     plt.show()
 
-def saveJSON(fsa: FSA, filePath: str) -> None:
-    with open(filePath, "w") as file:
-        data = {"initial": fsa.initialState,
+def saveJSON(fsa: FSA, filepath: str) -> None:
+    with open(filepath, "w") as file:
+        data = {"name": fsa.name,
+            "initial": fsa.initialState,
             "current": fsa.currState,
-            "graph": fsa.graph}
+            "nodes": fsa.nodes}
         json.dump(data, file, indent=4)
 
-def loadJSON(filePath: str) -> FSA:
-    with open(filePath, "r") as file:
+def loadJSON(fsa: FSA, filepath: str) -> FSA:
+    with open(filepath, "r") as file:
         data = json.load(file)
-        fsa = FSA()
+        fsa.name = data["name"]
         fsa.initialState = data["initial"]
         fsa.currState = data["current"]
-        fsa.graph = data["graph"]
+        fsa.nodes = data["nodes"]
         return fsa
