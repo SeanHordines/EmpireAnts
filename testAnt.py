@@ -1,7 +1,7 @@
 import ant
 import fsa
 
-testAnt = ant.ant((0, 0, 0))
+testAnt = ant.Ant((0, 0, 0))
 
 behavior = fsa.FSA("test1", "D:/Sean/programmingshit/EmpireAnts/sampleFSA1.json")
 testAnt.setBehavior(behavior)

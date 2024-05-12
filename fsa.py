@@ -1,7 +1,7 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 import json
-from typing import Dict, Tuple, Union
+from typing import Dict, Tuple
 
 def Node(name, func = None, edges = None):
     if func is None:
@@ -50,7 +50,7 @@ class FSA:
             if stateName in self.nodes[iterStateName]['edges']:
                 del self.nodes[iterStateName]['edges'][stateName]
 
-    def addEdge(self, startStateName: str, endStateName: str, transitionVector: Dict[Node, Union[int, float]]) -> None:
+    def addEdge(self, startStateName: str, endStateName: str, transitionVector: Dict[Node, float]) -> None:
         # check if adding states is necessary
         if startStateName not in self.nodes:
             self.addState(Node(startStateName))
@@ -103,7 +103,7 @@ class FSA:
 
             self.currState = newStateName
 
-    def next(self, inputVector: Dict[str, Union[int, float]]) -> str:
+    def next(self, inputVector: Dict[str, float]) -> str:
         newState = self.currState
         maxDotProduct = 0
 
